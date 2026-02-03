@@ -37,23 +37,51 @@ def process_docx():
         
         # Replace text in paragraphs
         for paragraph in doc.paragraphs:
-            for key, value in replacements_dict.items():
-                if key in paragraph.text:
-                    # Replace in runs to preserve formatting
+            # Check if paragraph contains any placeholders
+            para_text = paragraph.text
+            needs_replacement = False
+            for key in replacements_dict.keys():
+                if key in para_text:
+                    needs_replacement = True
+                    break
+            
+            if needs_replacement:
+                # Replace in the full paragraph text first
+                new_text = para_text
+                for key, value in replacements_dict.items():
+                    new_text = new_text.replace(key, str(value))
+                
+                # Clear all runs and add new text with first run's formatting
+                if paragraph.runs:
+                    first_run = paragraph.runs[0]
+                    # Clear paragraph
                     for run in paragraph.runs:
-                        if key in run.text:
-                            run.text = run.text.replace(key, str(value))
+                        run.text = ''
+                    # Set new text in first run
+                    first_run.text = new_text
         
         # Replace text in tables
         for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
-                        for key, value in replacements_dict.items():
-                            if key in paragraph.text:
+                        para_text = paragraph.text
+                        needs_replacement = False
+                        for key in replacements_dict.keys():
+                            if key in para_text:
+                                needs_replacement = True
+                                break
+                        
+                        if needs_replacement:
+                            new_text = para_text
+                            for key, value in replacements_dict.items():
+                                new_text = new_text.replace(key, str(value))
+                            
+                            if paragraph.runs:
+                                first_run = paragraph.runs[0]
                                 for run in paragraph.runs:
-                                    if key in run.text:
-                                        run.text = run.text.replace(key, str(value))
+                                    run.text = ''
+                                first_run.text = new_text
         
         # Save to BytesIO
         output = io.BytesIO()
